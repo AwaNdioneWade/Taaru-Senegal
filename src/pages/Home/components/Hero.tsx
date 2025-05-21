@@ -22,7 +22,7 @@ function Hero() {
           <div className="flex-1 text-center lg:text-left space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#333333] leading-tight">
-                <span className="block text-[#00853F]">Taar<span className="text-[#FDEF00]">u</span><span className="text-[#00853F]">★</span><span className="text-[#FDEF00]">S</span>énégal</span>
+                <span className="block text-[#00853F]">Taar<span className="text-[#FDEF00]">u</span><span className="text-[#00853F]">★</span><span className="text-[#FDEF00]">S</span><span className='text-[#E30B17]'>énégal</span></span>
                 <span className="block text-2xl sm:text-3xl lg:text-4xl mt-4 text-[#333333] font-medium">
                   l'art du sur-mesure,
                 </span>

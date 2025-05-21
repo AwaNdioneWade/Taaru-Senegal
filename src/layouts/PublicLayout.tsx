@@ -8,7 +8,7 @@ function PublicLayout() {
       <div className="w-full min-h-screen">
         <Navbar />
         <main className="w-full">
-          <Outlet />
+            <Outlet />
         </main>
         <Footer />
       </div>

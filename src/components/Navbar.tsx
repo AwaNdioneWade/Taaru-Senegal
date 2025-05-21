@@ -19,14 +19,14 @@ function Navbar() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, [scrolled]);
-
+  
     // Cache la navbar si on est sur login/register
     if (isAuthPage) return null;
 
     const toggleDropdown = (name: string) => {
         setActiveDropdown(activeDropdown === name ? null : name);
     };
-
+  
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
             scrolled ? 'bg-white/90 backdrop-blur-md shadow-lg' : 'bg-white'
@@ -39,7 +39,7 @@ function Navbar() {
                         className="flex items-center space-x-2"
                     >
                         <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00853F] to-[#FDEF00]">
-                            Taaru Sénégal
+          Taaru Sénégal
                         </span>
                     </Link>
 
@@ -47,8 +47,8 @@ function Navbar() {
                     <div className="hidden md:flex items-center space-x-8">
                         <Link 
                             to="/" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/' ? 'text-blue-600 font-medium' : ''
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             Accueil
@@ -58,33 +58,40 @@ function Navbar() {
                         <div className="relative group">
                             <button 
                                 onClick={() => toggleDropdown('services')}
-                                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-center"
+                                className="text-gray-700 hover:text-[#00853F] transition-colors duration-200 flex items-center gap-2"
                             >
+                                <span>
+                                    <i className="fas fa-concierge-bell text-[#FDEF00]"></i>
+                                </span>
                                 Services
                                 <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <div className={`absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 ${activeDropdown === 'services' ? 'block' : 'hidden'} border border-gray-100`}>
-                                <Link to="/tailleurs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    Pour les Tailleurs
+                            <div className={`absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 ${activeDropdown === 'services' ? 'block' : 'hidden'} border border-gray-100 z-50`}>
+                                <Link to="/services#tailleurs" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                    <i className="fas fa-scissors text-[#00853F]"></i>
+                                    <span>Pour les Tailleurs</span>
                                 </Link>
-                                <Link to="/clients" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    Pour les Clients
+                                <Link to="/services#clients" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                    <i className="fas fa-user-friends text-[#FDEF00]"></i>
+                                    <span>Pour les Clients</span>
                                 </Link>
-                                <Link to="/tissus" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    Tissus
+                                <Link to="/services#tissus" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                    <i className="fas fa-tshirt text-[#E30B17]"></i>
+                                    <span>Tissus</span>
                                 </Link>
-                                <Link to="/accessoires" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                    Accessoires
+                                <Link to="/services#accessoires" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                    <i className="fas fa-gem text-[#00853F]"></i>
+                                    <span>Accessoires</span>
                                 </Link>
                             </div>
                         </div>
 
                         <Link 
-                            to="/galerie" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/galerie' ? 'text-blue-600 font-medium' : ''
+                            to="/galeries" 
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/galeries' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             Galerie
@@ -92,8 +99,8 @@ function Navbar() {
 
                         <Link 
                             to="/formations" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/formations' ? 'text-blue-600 font-medium' : ''
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/formations' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             Formations & Ateliers
@@ -101,8 +108,8 @@ function Navbar() {
 
                         <Link 
                             to="/evenements" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/evenements' ? 'text-blue-600 font-medium' : ''
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/evenements' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             Événements
@@ -110,8 +117,8 @@ function Navbar() {
 
                         <Link 
                             to="/a-propos" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/a-propos' ? 'text-blue-600 font-medium' : ''
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/a-propos' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             À propos
@@ -119,18 +126,18 @@ function Navbar() {
 
                         <Link 
                             to="/contact" 
-                            className={`text-gray-700 hover:text-blue-600 transition-colors duration-200 ${
-                                location.pathname === '/contact' ? 'text-blue-600 font-medium' : ''
+                            className={`text-gray-700 hover:text-[#00853F] transition-colors duration-200 ${
+                                location.pathname === '/contact' ? 'text-[#00853F] font-medium' : ''
                             }`}
                         >
                             Contact
-                        </Link>
-
+        </Link>
+  
                         {/* Menu déroulant Mon Espace */}
                         <div className="relative group">
                             <button 
                                 onClick={() => toggleDropdown('espace')}
-                                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-center"
+                                className="text-gray-700 hover:text-[#00853F] transition-colors duration-200 flex items-center"
                             >
                                 Mon Espace
                                 <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,10 +145,10 @@ function Navbar() {
                                 </svg>
                             </button>
                             <div className={`absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 ${activeDropdown === 'espace' ? 'block' : 'hidden'} border border-gray-100`}>
-                                <Link to="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                <Link to="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
                                     Connexion
                                 </Link>
-                                <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
                                     Inscription
                                 </Link>
                             </div>
@@ -152,7 +159,7 @@ function Navbar() {
                     <div className="md:hidden">
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="text-gray-700 hover:text-blue-600 focus:outline-none"
+                            className="text-gray-700 hover:text-[#00853F] focus:outline-none"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {isMenuOpen ? (
@@ -169,52 +176,52 @@ function Navbar() {
                 {isMenuOpen && (
                     <div className="md:hidden">
                         <div className="px-2 pt-2 pb-3 space-y-1">
-                            <Link to="/" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Accueil
                             </Link>
                             <div className="space-y-1">
-                                <button className="w-full text-left px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                <button className="w-full text-left px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                     Services
                                 </button>
                                 <div className="pl-4 space-y-1">
-                                    <Link to="/tailleurs" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/services#tailleurs" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Pour les Tailleurs
                                     </Link>
-                                    <Link to="/clients" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/services#clients" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Pour les Clients
                                     </Link>
-                                    <Link to="/tissus" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/services#tissus" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Tissus
                                     </Link>
-                                    <Link to="/accessoires" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/services#accessoires" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Accessoires
                                     </Link>
                                 </div>
                             </div>
-                            <Link to="/galerie" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/galerie" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Galerie
                             </Link>
-                            <Link to="/formations" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/formations" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Formations & Ateliers
                             </Link>
-                            <Link to="/evenements" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/evenements" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Événements
                             </Link>
-                            <Link to="/a-propos" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/a-propos" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 À propos
                             </Link>
-                            <Link to="/contact" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                            <Link to="/contact" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Contact
                             </Link>
                             <div className="space-y-1">
-                                <button className="w-full text-left px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                <button className="w-full text-left px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                     Mon Espace
                                 </button>
                                 <div className="pl-4 space-y-1">
-                                    <Link to="/login" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/login" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Connexion
                                     </Link>
-                                    <Link to="/register" className="block px-3 py-2 text-gray-700 hover:bg-blue-50 rounded-md">
+                                    <Link to="/register" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Inscription
                                     </Link>
                                 </div>
@@ -222,9 +229,9 @@ function Navbar() {
                         </div>
                     </div>
                 )}
-            </div>
-        </nav>
+        </div>
+      </nav>
     );
-}
+  }
 
 export default Navbar

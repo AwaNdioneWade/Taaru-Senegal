@@ -17,7 +17,7 @@ function Button({
   }: ButtonProps) {
     const base = 'py-3 px-6 rounded-lg font-medium transition ';
     const variants = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700',
+      primary: 'bg-[#00853F] text-white hover:bg-[#FDEF00]',
       secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
     };
   

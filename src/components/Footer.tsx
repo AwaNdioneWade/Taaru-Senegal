@@ -19,22 +19,22 @@ function Footer() {
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Services</h4>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link to="/tailleurs" className="text-gray-500 hover:text-blue-600">
+                <Link to="/tailleurs" className="text-gray-500 hover:text-[#00853F]">
                   Pour les Tailleurs
                 </Link>
               </li>
               <li>
-                <Link to="/clients" className="text-gray-500 hover:text-blue-600">
+                <Link to="/clients" className="text-gray-500 hover:text-[#00853F]">
                   Pour les Clients
                 </Link>
               </li>
               <li>
-                <Link to="/tissus" className="text-gray-500 hover:text-blue-600">
+                <Link to="/tissus" className="text-gray-500 hover:text-[#00853F]">
                   Vendeurs de Tissus
                 </Link>
               </li>
               <li>
-                <Link to="/accessoires" className="text-gray-500 hover:text-blue-600">
+                <Link to="/accessoires" className="text-gray-500 hover:text-[#00853F]">
                   Vendeurs d'Accessoires
                 </Link>
               </li>
@@ -46,17 +46,17 @@ function Footer() {
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Légal</h4>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link to="/confidentialite" className="text-gray-500 hover:text-blue-600">
+                <Link to="/confidentialite" className="text-gray-500 hover:text-[#00853F]">
                   Confidentialité
                 </Link>
               </li>
               <li>
-                <Link to="/conditions" className="text-gray-500 hover:text-blue-600">
+                <Link to="/conditions" className="text-gray-500 hover:text-[#00853F]">
                   Conditions d'utilisation
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-500 hover:text-blue-600">
+                <Link to="/contact" className="text-gray-500 hover:text-[#00853F]">
                   Contact
                 </Link>
               </li>

@@ -60,7 +60,7 @@ function Connexion() {
   
           <p className="text-sm text-center mt-4">
             Pas encore de compte ?{' '}
-            <a href="/register" className="text-blue-600 hover:underline">
+            <a href="/register" className="text-[#00853F] hover:underline">
               Inscription
             </a>
           </p>
