@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom';
 
 function Navbar() {
@@ -7,6 +7,8 @@ function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const servicesDropdownRef = useRef<HTMLDivElement>(null);
+    const espaceDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -19,12 +21,28 @@ function Navbar() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, [scrolled]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (servicesDropdownRef.current && !servicesDropdownRef.current.contains(event.target as Node) &&
+                espaceDropdownRef.current && !espaceDropdownRef.current.contains(event.target as Node)) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
   
     // Cache la navbar si on est sur login/register
     if (isAuthPage) return null;
 
     const toggleDropdown = (name: string) => {
         setActiveDropdown(activeDropdown === name ? null : name);
+    };
+
+    const handleSubmenuClick = () => {
+        setActiveDropdown(null);
     };
   
     return (
@@ -55,7 +73,7 @@ function Navbar() {
                         </Link>
 
                         {/* Menu déroulant Services */}
-                        <div className="relative group">
+                        <div className="relative group" ref={servicesDropdownRef}>
                             <button 
                                 onClick={() => toggleDropdown('services')}
                                 className="text-gray-700 hover:text-[#00853F] transition-colors duration-200 flex items-center gap-2"
@@ -69,19 +87,19 @@ function Navbar() {
                                 </svg>
                             </button>
                             <div className={`absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 ${activeDropdown === 'services' ? 'block' : 'hidden'} border border-gray-100 z-50`}>
-                                <Link to="/services#tailleurs" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                <Link to="/services#tailleurs" onClick={handleSubmenuClick} className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
                                     <i className="fas fa-scissors text-[#00853F]"></i>
                                     <span>Pour les Tailleurs</span>
                                 </Link>
-                                <Link to="/services#clients" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                <Link to="/services#clients" onClick={handleSubmenuClick} className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
                                     <i className="fas fa-user-friends text-[#FDEF00]"></i>
                                     <span>Pour les Clients</span>
                                 </Link>
-                                <Link to="/services#tissus" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                <Link to="/services#tissus" onClick={handleSubmenuClick} className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
                                     <i className="fas fa-tshirt text-[#E30B17]"></i>
                                     <span>Tissus</span>
                                 </Link>
-                                <Link to="/services#accessoires" className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
+                                <Link to="/services#accessoires" onClick={handleSubmenuClick} className="flex items-center gap-3 px-4 py-3 hover:bg-[#00853F]/10 rounded-lg transition">
                                     <i className="fas fa-gem text-[#00853F]"></i>
                                     <span>Accessoires</span>
                                 </Link>
@@ -131,10 +149,10 @@ function Navbar() {
                             }`}
                         >
                             Contact
-        </Link>
+                        </Link>
   
                         {/* Menu déroulant Mon Espace */}
-                        <div className="relative group">
+                        <div className="relative group" ref={espaceDropdownRef}>
                             <button 
                                 onClick={() => toggleDropdown('espace')}
                                 className="text-gray-700 hover:text-[#00853F] transition-colors duration-200 flex items-center"
@@ -145,10 +163,10 @@ function Navbar() {
                                 </svg>
                             </button>
                             <div className={`absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 ${activeDropdown === 'espace' ? 'block' : 'hidden'} border border-gray-100`}>
-                                <Link to="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
+                                <Link to="/login" onClick={handleSubmenuClick} className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
                                     Connexion
                                 </Link>
-                                <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
+                                <Link to="/register" onClick={handleSubmenuClick} className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#00853F]">
                                     Inscription
                                 </Link>
                             </div>
@@ -176,7 +194,7 @@ function Navbar() {
                 {isMenuOpen && (
                     <div className="md:hidden">
                         <div className="px-2 pt-2 pb-3 space-y-1">
-                            <Link to="/" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Accueil
                             </Link>
                             <div className="space-y-1">
@@ -184,33 +202,33 @@ function Navbar() {
                                     Services
                                 </button>
                                 <div className="pl-4 space-y-1">
-                                    <Link to="/services#tailleurs" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/services#tailleurs" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Pour les Tailleurs
                                     </Link>
-                                    <Link to="/services#clients" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/services#clients" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Pour les Clients
                                     </Link>
-                                    <Link to="/services#tissus" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/services#tissus" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Tissus
                                     </Link>
-                                    <Link to="/services#accessoires" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/services#accessoires" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Accessoires
                                     </Link>
                                 </div>
                             </div>
-                            <Link to="/galerie" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/galerie" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Galerie
                             </Link>
-                            <Link to="/formations" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/formations" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Formations & Ateliers
                             </Link>
-                            <Link to="/evenements" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/evenements" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Événements
                             </Link>
-                            <Link to="/a-propos" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/a-propos" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 À propos
                             </Link>
-                            <Link to="/contact" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                            <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                 Contact
                             </Link>
                             <div className="space-y-1">
@@ -218,10 +236,10 @@ function Navbar() {
                                     Mon Espace
                                 </button>
                                 <div className="pl-4 space-y-1">
-                                    <Link to="/login" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Connexion
                                     </Link>
-                                    <Link to="/register" className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
+                                    <Link to="/register" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 text-gray-700 hover:bg-[#00853F] rounded-md">
                                         Inscription
                                     </Link>
                                 </div>
@@ -229,9 +247,9 @@ function Navbar() {
                         </div>
                     </div>
                 )}
-        </div>
-      </nav>
+            </div>
+        </nav>
     );
-  }
+}
 
 export default Navbar

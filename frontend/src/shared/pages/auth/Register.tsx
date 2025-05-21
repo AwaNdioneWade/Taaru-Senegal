@@ -1,16 +1,18 @@
 import React, { useState } from 'react'
-import Button from '../components/forms/Button';
-import InputField from '../components/forms/InputField';
-import Select from '../components/forms/Select';
+import Button from '../../components/forms/Button';
+import InputField from '../../components/forms/InputField';
+import Select from '../../components/forms/Select';
+import { useNavigate } from 'react-router-dom';
 
-const roles = ['Client', 'Tailleur', 'Vendeur de Tissu', 'Vendeur d’Accessoires'];
+const roles = ['Client', 'Tailleur', 'Vendeur de Tissu', 'Vendeur d\'Accessoires'];
 
-function Inscription () {
+function Register() {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [role, setRole] = useState(roles[0]);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const navigate = useNavigate();
   
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
@@ -20,7 +22,7 @@ function Inscription () {
         return;
       }
   
-      // Appel API d’inscription à venir ici
+      // Appel API d'inscription à venir ici
       const userData = {
         fullName,
         email,
@@ -28,6 +30,18 @@ function Inscription () {
         password,
       };
       console.log(userData);
+
+      // Redirection basée sur le rôle après inscription
+      switch (role) {
+        case 'Admin':
+          navigate('/admin');
+          break;
+        case 'Tailleur':
+          navigate('/tailor');
+          break;
+        default:
+          navigate('/');
+      }
     };
   
     return (
@@ -79,10 +93,16 @@ function Inscription () {
           />
   
           <Button type="submit">S'inscrire</Button>
+
+          <p className="text-sm text-center mt-4">
+            Déjà un compte ?{' '}
+            <a href="/login" className="text-[#00853F] hover:underline">
+              Connexion
+            </a>
+          </p>
         </form>
       </div>
     );
   }
   
-
-export default Inscription
+export default Register 
