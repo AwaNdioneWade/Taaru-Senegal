@@ -8,8 +8,13 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
+
+  if (isLoading) {
+    // Affiche un loader ou rien le temps de restaurer l'auth
+    return <div>Chargement...</div>;
+  }
 
   if (!isAuthenticated) {
     // Rediriger vers la page de connexion appropriée
@@ -25,15 +30,20 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    // Rediriger vers la page d'accueil appropriée selon le rôle
-    switch (user.role) {
-      case 'Admin':
-        return <Navigate to="/admin" replace />;
-      case 'Tailleur':
-        return <Navigate to="/tailor" replace />;
-      default:
-        return <Navigate to="/" replace />;
+  if (allowedRoles && user) {
+    const userRole = user.role.toLowerCase();
+    const hasAllowedRole = allowedRoles.some(role => role.toLowerCase() === userRole);
+    
+    if (!hasAllowedRole) {
+      // Rediriger vers la page d'accueil appropriée selon le rôle
+      switch (userRole) {
+        case 'admin':
+          return <Navigate to="/admin" replace />;
+        case 'tailleur':
+          return <Navigate to="/tailor" replace />;
+        default:
+          return <Navigate to="/" replace />;
+      }
     }
   }
 

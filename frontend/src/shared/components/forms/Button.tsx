@@ -6,6 +6,7 @@ interface ButtonProps {
     type?: 'button' | 'submit' | 'reset';
     variant?: 'primary' | 'secondary';
     fullWidth?: boolean;
+    disabled?: boolean;
   }
   
 function Button({
@@ -14,6 +15,7 @@ function Button({
     type = 'button',
     variant = 'primary',
     fullWidth = true,
+    disabled = false,
   }: ButtonProps) {
     const base = 'py-3 px-6 rounded-lg font-medium transition ';
     const variants = {
@@ -25,7 +27,8 @@ function Button({
       <button
         type={type}
         onClick={onClick}
-        className={`${base} ${variants[variant]} ${fullWidth ? 'w-full' : ''}`}
+        className={`${base} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={disabled}
       >
         {children}
       </button>

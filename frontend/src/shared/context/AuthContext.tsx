@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
+  id: number;
   email: string;
   role: string;
-  fullName?: string;
+  name: string;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -11,6 +13,7 @@ interface AuthContextType {
   login: (userData: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,15 +21,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté au chargement
     const storedUser = localStorage.getItem('taaru_user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('auth_token');
+    
+    if (storedUser && storedToken) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
       setIsAuthenticated(true);
     }
+    setIsLoading(false);
   }, []);
 
   const login = (userData: User) => {
@@ -39,10 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('taaru_user');
+    localStorage.removeItem('auth_token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

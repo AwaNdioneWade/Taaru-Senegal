@@ -25,7 +25,17 @@ import Messages from './tailor/pages/Messages';
 
 // Admin Pages
 import AdminDashboard from './admin/pages/Dashboard';
-
+import Users from './admin/pages/Users';
+import Tailleurs from './admin/pages/Tailleurs';
+import Modeles from './admin/pages/Modeles';
+import Commandes from './admin/pages/Commandes';
+import Tissus from './admin/pages/Tissus';
+import Accessoires from './admin/pages/Accessoires';
+import Evenements from './admin/pages/Evenements';
+import Formations from './admin/pages/Formations';
+import Moderation from './admin/pages/Moderation';
+import Statistics from './admin/pages/Statistics';
+import Settings from './admin/pages/Settings';
 function App() {
   return (
     <AuthProvider>
@@ -35,12 +45,12 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<div>À propos</div>} />
           <Route path="/contact" element={<div>Contact</div>} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
         </Route>
 
         {/* Client Routes */}
         <Route path="/client">
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
           <Route
             element={
               <ProtectedRoute allowedRoles={['Client']}>
@@ -90,6 +100,17 @@ function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<Users/>} />
+            <Route path="tailleurs" element={<Tailleurs/>} />
+            <Route path="modeles" element={<Modeles/>} />
+            <Route path="commandes" element={<Commandes/>} />
+            <Route path="tissus" element={<Tissus/>} />
+            <Route path="accessoires" element={<Accessoires />} />
+            <Route path="evenements" element={<Evenements />} />
+            <Route path="formations" element={<Formations />} />
+            <Route path="moderation" element={<Moderation />} />
+            <Route path="stats" element={<Statistics />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

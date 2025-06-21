@@ -57,7 +57,7 @@ function Navbar() {
                         className="flex items-center space-x-2"
                     >
                         <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00853F] to-[#FDEF00]">
-          Taaru Sénégal
+                            Taaru Sénégal
                         </span>
                     </Link>
 

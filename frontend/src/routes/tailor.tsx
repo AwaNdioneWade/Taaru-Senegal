@@ -20,7 +20,7 @@ export const TailorRoutes = () => {
       <Route
         path="/"
         element={
-          <ProtectedRoute allowedRoles={['Tailleur']}>
+          <ProtectedRoute allowedRoles={['tailleur']}>
             <TailorLayout />
           </ProtectedRoute>
         }

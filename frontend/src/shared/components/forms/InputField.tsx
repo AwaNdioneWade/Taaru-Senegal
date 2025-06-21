@@ -7,6 +7,7 @@ interface InputProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     placeholder?: string;
     required?: boolean;
+    disabled?: boolean;
   }
   
 function InputField({
@@ -16,6 +17,7 @@ function InputField({
     onChange,
     placeholder,
     required = false,
+    disabled = false,
   }: InputProps) {
     return (
       <div className="mb-4">
@@ -26,7 +28,10 @@ function InputField({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00853F]"
+          disabled={disabled}
+          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00853F] ${
+            disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+          }`}
         />
       </div>
     );

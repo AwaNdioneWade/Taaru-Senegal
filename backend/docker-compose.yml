@@ -1,0 +1,68 @@
+# version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: taaru-laravel-app
+    container_name: taaru_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    ports:
+      - "9000:9000"
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - mailpit
+    networks:
+      - taaru
+
+  mysql:
+    image: mysql:8.0
+    container_name: taaru_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: taaru_db
+      MYSQL_USER: taaru_user
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - taaru
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: taaru_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - mysql
+    networks:
+      - taaru
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: taaru_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # Interface web
+      - "1025:1025"   # Port SMTP
+    networks:
+      - taaru
+
+networks:
+  taaru:
+
+volumes:
+  dbdata:

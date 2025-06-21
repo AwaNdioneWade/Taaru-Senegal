@@ -3,50 +3,69 @@ import Button from '../../components/forms/Button';
 import InputField from '../../components/forms/InputField';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { testUsers } from '../../config/auth';
+import { login } from '../../../services/authService';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const { login } = useAuth();
+    const { login: authLogin } = useAuth();
   
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
+      setIsLoading(true);
 
-      // Vérification des identifiants
-      const user = testUsers.find(
-        u => u.email === email && u.password === password
-      );
+      try {
+        // Appel à l'API Laravel pour la connexion
+        const response = await login({ email, password });
+        
+        // Connexion réussie
+        const userData = {
+          id: response.user.id,
+          email: response.user.email,
+          role: response.user.role,
+          name: response.user.name,
+          token: response.token
+        };
 
-      if (!user) {
-        setError('Email ou mot de passe incorrect');
-        return;
-      }
-
-      // Connexion réussie
-      const userData = {
-        email: user.email,
-        role: user.role,
-        fullName: user.fullName
-      };
-
-      login(userData);
-      
-      // Redirection basée sur le rôle
-      const from = location.state?.from?.pathname || '/';
-      switch (user.role) {
-        case 'Admin':
-          navigate('/admin');
-          break;
-        case 'Tailleur':
-          navigate('/tailor');
-          break;
-        default:
-          navigate(from);
+        // Stocker le token dans localStorage
+        localStorage.setItem('auth_token', response.token);
+        
+        // Mettre à jour le contexte d'authentification
+        authLogin(userData);
+        
+        // Redirection basée sur le rôle
+        const from = location.state?.from?.pathname || '/';
+        const userRole = response.user.role.toLowerCase();
+        
+        console.log('Rôle utilisateur:', userRole);
+        console.log('Données utilisateur:', response.user);
+        
+        switch (userRole) {
+          case 'admin':
+            console.log('Redirection vers /admin');
+            navigate('/admin');
+            break;
+          case 'tailleur':
+            console.log('Redirection vers /tailor');
+            navigate('/tailor');
+            break;
+          case 'client':
+            console.log('Redirection vers la page d\'accueil');
+            navigate(from);
+            break;
+          default:
+            console.log('Rôle non reconnu, redirection vers la page d\'accueil');
+            navigate(from);
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion');
+      } finally {
+        setIsLoading(false);
       }
     };
   
@@ -83,6 +102,7 @@ function Login() {
               onChange={e => setEmail(e.target.value)}
               placeholder="Ex : user@mail.com"
               required
+              disabled={isLoading}
             />
     
             <InputField
@@ -91,9 +111,12 @@ function Login() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
     
-            <Button type="submit">Se connecter</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+            </Button>
     
             <p className="text-sm text-center mt-4">
               Pas encore de compte ?{' '}
@@ -105,11 +128,10 @@ function Login() {
 
           {/* Informations de test */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-semibold mb-2">Comptes de test :</h3>
+            <h3 className="text-sm font-semibold mb-2">Compte administrateur :</h3>
             <div className="text-xs space-y-1">
-              <p><strong>Admin:</strong> admin@taaru.com / admin123</p>
-              <p><strong>Tailleur:</strong> tailleur@taaru.com / tailleur123</p>
-              <p><strong>Client:</strong> client@taaru.com / client123</p>
+              <p><strong>Email:</strong> admin@taarusenegal.com</p>
+              <p><strong>Mot de passe:</strong> password</p>
             </div>
           </div>
         </div>

@@ -37,8 +37,10 @@ export const TailorLayout = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link to="/tailor" className="text-2xl font-bold text-[#00853F]">
-                  Taaru Tailleur
+                <Link to="/" className="flex items-center space-x-2">
+                  <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00853F] to-[#FDEF00]">
+                    Taaru Sénégal
+                  </span>
                 </Link>
               </div>
             </div>
