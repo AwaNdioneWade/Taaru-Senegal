@@ -12,8 +12,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/register',        [AuthController::class, 'register']);
     Route::post('/login',           [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::middleware('auth:sanctum')->get('/me',     [AuthController::class, 'me']);
-    Route::middleware('auth:sanctum')->post('/logout',[AuthController::class, 'logout']);
+    Route::middleware('api.auth')->get('/me',     [AuthController::class, 'me']);
+    Route::middleware('api.auth')->post('/logout',[AuthController::class, 'logout']);
+    Route::middleware('api.auth')->get('/test',   [AuthController::class, 'testAuth']);
 });
 
 // Routes pour les tailleurs
@@ -26,16 +27,21 @@ Route::prefix('tailleurs')->group(function () {
 });
 
 // Routes pour les modèles
-Route::middleware('auth:sanctum')->prefix('modeles')->group(function () {
+Route::prefix('modeles')->group(function () {
+    // Routes publiques (accessibles sans authentification)
     Route::get('/', [ModeleController::class, 'index']);
-    Route::post('/', [ModeleController::class, 'store']);
     Route::get('/{id}', [ModeleController::class, 'show']);
-    Route::put('/{id}', [ModeleController::class, 'update']);
-    Route::delete('/{id}', [ModeleController::class, 'destroy']);
+    
+    // Routes protégées (nécessitent une authentification)
+    Route::middleware('api.auth')->group(function () {
+        Route::post('/', [ModeleController::class, 'store']);
+        Route::put('/{id}', [ModeleController::class, 'update']);
+        Route::delete('/{id}', [ModeleController::class, 'destroy']);
+    });
 });
 
 // Routes pour l'administration
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+Route::middleware(['api.auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/users', [AdminUserController::class, 'store']);
     // Ajoutez ici d'autres routes d'administration
 });

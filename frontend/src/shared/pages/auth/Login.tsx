@@ -4,12 +4,15 @@ import InputField from '../../components/forms/InputField';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { login } from '../../../services/authService';
+import { testApiConnection, testAuthentication, testModelesAccess, testPublicModelesAccess, testCreateModele, testCurrentAuth, testDirectAuth } from '../../../services/apiTestService';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [testResults, setTestResults] = useState<string[]>([]);
+    const [isTesting, setIsTesting] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { login: authLogin } = useAuth();
@@ -36,7 +39,7 @@ function Login() {
         localStorage.setItem('auth_token', response.token);
         
         // Mettre à jour le contexte d'authentification
-        authLogin(userData);
+        authLogin(userData, response.token);
         
         // Redirection basée sur le rôle
         const from = location.state?.from?.pathname || '/';
@@ -66,6 +69,83 @@ function Login() {
         setError(error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion');
       } finally {
         setIsLoading(false);
+      }
+    };
+
+    const runDiagnostics = async () => {
+      setIsTesting(true);
+      setTestResults([]);
+      
+      try {
+        // Test 1: Connexion API
+        setTestResults(prev => [...prev, '🔍 Test 1: Connexion à l\'API...']);
+        const connectionTest = await testApiConnection();
+        setTestResults(prev => [...prev, `✅ ${connectionTest.message}`]);
+        
+        if (!connectionTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${connectionTest.error}`]);
+          return;
+        }
+        
+        // Test 2: Accès public aux modèles
+        setTestResults(prev => [...prev, '🔍 Test 2: Accès public aux modèles...']);
+        const publicModelesTest = await testPublicModelesAccess();
+        setTestResults(prev => [...prev, `✅ ${publicModelesTest.message}`]);
+        
+        if (!publicModelesTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${publicModelesTest.error}`]);
+        }
+        
+        // Test 3: Authentification
+        setTestResults(prev => [...prev, '🔍 Test 3: Authentification...']);
+        const authTest = await testAuthentication();
+        setTestResults(prev => [...prev, `✅ ${authTest.message}`]);
+        
+        if (!authTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${authTest.error}`]);
+          return;
+        }
+        
+        // Test 3.5: Authentification avec le token actuel
+        setTestResults(prev => [...prev, '🔍 Test 3.5: Token actuel...']);
+        const currentAuthTest = await testCurrentAuth();
+        setTestResults(prev => [...prev, `✅ ${currentAuthTest.message}`]);
+        
+        if (!currentAuthTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${currentAuthTest.error}`]);
+        }
+        
+        // Test 3.6: Authentification directe
+        setTestResults(prev => [...prev, '🔍 Test 3.6: Authentification directe...']);
+        const directAuthTest = await testDirectAuth();
+        setTestResults(prev => [...prev, `✅ ${directAuthTest.message}`]);
+        
+        if (!directAuthTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${directAuthTest.error}`]);
+        }
+        
+        // Test 4: Accès aux modèles avec authentification
+        setTestResults(prev => [...prev, '🔍 Test 4: Accès aux modèles (avec auth)...']);
+        const modelesTest = await testModelesAccess();
+        setTestResults(prev => [...prev, `✅ ${modelesTest.message}`]);
+        
+        if (!modelesTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${modelesTest.error}`]);
+        }
+        
+        // Test 5: Création de modèle avec authentification
+        setTestResults(prev => [...prev, '🔍 Test 5: Création de modèle...']);
+        const createTest = await testCreateModele();
+        setTestResults(prev => [...prev, `✅ ${createTest.message}`]);
+        
+        if (!createTest.success) {
+          setTestResults(prev => [...prev, `❌ Erreur: ${createTest.error}`]);
+        }
+        
+      } catch (error) {
+        setTestResults(prev => [...prev, `❌ Erreur inattendue: ${error instanceof Error ? error.message : 'Erreur inconnue'}`]);
+      } finally {
+        setIsTesting(false);
       }
     };
   
@@ -125,6 +205,28 @@ function Login() {
               </a>
             </p>
           </form>
+
+          {/* Bouton de diagnostic */}
+          <div className="mt-4">
+            <button 
+              onClick={runDiagnostics} 
+              disabled={isTesting}
+              className="w-full py-3 px-6 rounded-lg font-medium transition bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isTesting ? 'Diagnostic en cours...' : '🔧 Diagnostiquer les problèmes'}
+            </button>
+            
+            {testResults.length > 0 && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-semibold mb-2">Résultats du diagnostic :</h3>
+                <div className="text-xs space-y-1">
+                  {testResults.map((result, index) => (
+                    <div key={index} className="font-mono">{result}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Informations de test */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">

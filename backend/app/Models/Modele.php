@@ -14,7 +14,7 @@ class Modele extends Model
         'prix',
         'description',
         'tags',
-        'materiaux',
+        'materiaux_utilises',
         'slug',
         'statut',
         'photos',
@@ -23,7 +23,7 @@ class Modele extends Model
 
     protected $casts = [
         'tags' => 'array',
-        'materiaux' => 'array',
+        'materiaux_utilises' => 'string',
         'photos' => 'array',
         'videos' => 'array',
         'prix' => 'decimal:2',

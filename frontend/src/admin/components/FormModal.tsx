@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { ReactNode, useState, useRef } from 'react';
+import { X, Play, File } from 'lucide-react';
 
 export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'file' | 'tags' | 'date' | 'email' | 'tel';
 
@@ -26,10 +26,10 @@ export interface FormField {
 interface FormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Record<string, any>) => void;
+  onSubmit: (data: Record<string, unknown>) => void;
   title: string;
   fields: FormField[];
-  initialData?: Record<string, any>;
+  initialData?: Record<string, unknown>;
   submitLabel?: string;
   cancelLabel?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -50,6 +50,9 @@ export const FormModal = ({
   customFields = {},
   error = null,
 }: FormModalProps) => {
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   if (!isOpen) return null;
 
   const getSizeClass = () => {
@@ -67,14 +70,50 @@ export const FormModal = ({
     }
   };
 
+  const handleFileChange = (fieldName: string, files: FileList | null) => {
+    if (files) {
+      const fileArray = Array.from(files);
+      setSelectedFiles(prev => ({
+        ...prev,
+        [fieldName]: [...(prev[fieldName] || []), ...fileArray]
+      }));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (fieldName: string, e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      setSelectedFiles(prev => ({
+        ...prev,
+        [fieldName]: [...(prev[fieldName] || []), ...fileArray]
+      }));
+    }
+  };
+
+  const removeFile = (fieldName: string, index: number) => {
+    setSelectedFiles(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName]?.filter((_, i) => i !== index) || []
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
 
     fields.forEach(field => {
       if (field.type === 'file') {
-        const files = formData.getAll(field.name);
+        const files = selectedFiles[field.name] || [];
         data[field.name] = field.multiple ? files : files[0];
       } else {
         data[field.name] = formData.get(field.name);
@@ -82,6 +121,68 @@ export const FormModal = ({
     });
 
     onSubmit(data);
+  };
+
+  const renderFilePreview = (fieldName: string) => {
+    const files = selectedFiles[fieldName] || [];
+    
+    if (files.length === 0) return null;
+
+    return (
+      <div className="mt-3">
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Fichiers sélectionnés ({files.length})</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {files.map((file, index) => {
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            const fileUrl = URL.createObjectURL(file);
+
+            return (
+              <div key={index} className="relative group">
+                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
+                  {isImage ? (
+                    <img
+                      src={fileUrl}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : isVideo ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <video
+                        src={fileUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Play className="w-8 h-8 text-white bg-black bg-opacity-50 rounded-full p-1" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <File className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Bouton de suppression */}
+                <button
+                  type="button"
+                  onClick={() => removeFile(fieldName, index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+                
+                {/* Nom du fichier */}
+                <p className="text-xs text-gray-600 mt-1 truncate" title={file.name}>
+                  {file.name}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const renderField = (field: FormField) => {
@@ -95,7 +196,7 @@ export const FormModal = ({
       required: field.required,
       placeholder: field.placeholder,
       className: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#00853F] focus:ring-[#00853F]",
-      defaultValue: initialData[field.name],
+      defaultValue: initialData[field.name] as string | number | undefined,
     };
 
     switch (field.type) {
@@ -128,34 +229,65 @@ export const FormModal = ({
           />
         );
 
-      case 'file':
+      case 'file': {
+        const files = selectedFiles[field.name] || [];
+        // Détecter si c'est un champ de modèle pour activer la sélection multiple
+        const isModeleField = field.name.toLowerCase().includes('modele') || 
+                             field.name.toLowerCase().includes('media') || 
+                             field.name.toLowerCase().includes('photo') || 
+                             field.name.toLowerCase().includes('video');
+        
         return (
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <div className="flex text-sm text-gray-600">
-                <label
-                  htmlFor={field.name}
-                  className="relative cursor-pointer bg-white rounded-md font-medium text-[#00853F] hover:text-[#006B32] focus-within:outline-none"
-                >
-                  <span>Télécharger un fichier</span>
-                  <input
-                    {...commonProps}
-                    type="file"
-                    className="sr-only"
-                    accept={field.accept}
-                    multiple={field.multiple}
-                  />
-                </label>
-                <p className="pl-1">ou glisser-déposer</p>
+          <div>
+            <div 
+              className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(field.name, e)}
+            >
+              <div className="space-y-1 text-center">
+                <div className="flex text-sm text-gray-600">
+                  <label
+                    htmlFor={field.name}
+                    className="relative cursor-pointer bg-white rounded-md font-medium text-[#00853F] hover:text-[#006B32] focus-within:outline-none"
+                  >
+                    <span>
+                      {isModeleField ? 'Sélectionner des fichiers' : 'Télécharger un fichier'}
+                    </span>
+                    <input
+                      {...commonProps}
+                      type="file"
+                      className="sr-only"
+                      accept={field.accept}
+                      multiple={field.multiple || isModeleField}
+                      ref={(el) => {
+                        fileInputRefs.current[field.name] = el;
+                      }}
+                      onChange={(e) => handleFileChange(field.name, e.target.files)}
+                    />
+                  </label>
+                  <p className="pl-1">ou glisser-déposer</p>
+                </div>
+                {field.accept && (
+                  <p className="text-xs text-gray-500">
+                    {field.accept.split(',').join(', ')}
+                  </p>
+                )}
+                {isModeleField && (
+                  <p className="text-xs text-blue-600 font-medium">
+                    Vous pouvez sélectionner plusieurs fichiers
+                  </p>
+                )}
+                {files.length > 0 && (
+                  <p className="text-xs text-[#00853F] font-medium">
+                    {files.length} fichier{files.length > 1 ? 's' : ''} sélectionné{files.length > 1 ? 's' : ''}
+                  </p>
+                )}
               </div>
-              {field.accept && (
-                <p className="text-xs text-gray-500">
-                  {field.accept.split(',').join(', ')}
-                </p>
-              )}
             </div>
+            {renderFilePreview(field.name)}
           </div>
         );
+      }
 
       case 'tags':
         return (
@@ -166,7 +298,7 @@ export const FormModal = ({
               placeholder="Appuyez sur Entrée pour ajouter un tag"
             />
             <div className="mt-2 flex flex-wrap gap-2">
-              {initialData[field.name]?.map((tag: string) => (
+              {(initialData[field.name] as string[])?.map((tag: string) => (
                 <span
                   key={tag}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00853F] text-white"
@@ -221,7 +353,7 @@ export const FormModal = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {fields.map((field) => (
-                <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                <div key={field.name} className={field.type === 'textarea' || field.type === 'file' ? 'md:col-span-2' : ''}>
                   <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}

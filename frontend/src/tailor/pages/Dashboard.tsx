@@ -55,6 +55,12 @@ const Dashboard = () => {
       { value: 'enfant', label: 'Enfant' },
       { value: 'mixte', label: 'Mixte' },
     ]},
+    { name: 'statut', label: 'Statut', type: 'select', required: true, options: [
+      { value: 'en_attente', label: 'En attente' },
+      { value: 'approuve', label: 'Approuvé' },
+      { value: 'rejete', label: 'Rejeté' },
+      { value: 'actif', label: 'Actif' },
+    ]},
     { name: 'prix', label: 'Prix (FCFA)', type: 'number', required: false, placeholder: 'Ex: 25000', min: 0 },
     { name: 'tags', label: 'Tags (Mots-clés)', type: 'tags', helpText: 'Ex: mariage, traditionnel, wax. Appuyez sur Entrée pour ajouter.' },
     { name: 'description', label: 'Description', type: 'textarea', required: true, placeholder: 'Décrivez votre modèle en détail : tissus utilisés, occasions, etc.', rows: 5 },
@@ -62,7 +68,7 @@ const Dashboard = () => {
     { name: 'media', label: 'Photos et Vidéos du modèle', type: 'file', required: true, accept: 'image/*,video/*', multiple: true, helpText: 'Sélectionnez une ou plusieurs images ou vidéos.' },
   ];
 
-  const handleAddModelSubmit = async (data: Record<string, string | File | (string | File)[]>) => {
+  const handleAddModelSubmit = async (data: Record<string, unknown>) => {
     console.log("Début de la soumission du formulaire, données reçues:", data);
     setIsSubmitting(true);
     setSubmitError(null);
@@ -71,15 +77,26 @@ const Dashboard = () => {
     Object.keys(data).forEach(key => {
       const value = data[key];
       if (key === 'media' && Array.isArray(value)) {
-        value.forEach((file) => {
+        value.forEach((file, index) => {
           if (file instanceof File) {
-            formData.append('media[]', file);
+            console.log(`Ajout du fichier ${index}:`, {
+              name: file.name,
+              size: file.size,
+              type: file.type
+            });
+            formData.append(`media.${index}`, file);
           }
         });
       } else if (value !== null && value !== undefined && typeof value === 'string') {
         formData.append(key, value);
       }
     });
+
+    // Log du FormData pour debug
+    console.log("FormData créé:");
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value instanceof File ? `${value.name} (${value.size} bytes)` : value);
+    }
 
     try {
       await createModele(formData);
@@ -89,9 +106,28 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Erreur lors de la création du modèle:', error);
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || 'Une erreur est survenue.';
-        const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
-        setSubmitError(`${errorMessage} ${errorDetails}`);
+        let errorMessage = 'Une erreur est survenue.';
+        
+        if (error.response?.status === 422) {
+          // Erreur de validation
+          const errors = error.response.data.errors;
+          if (errors) {
+            const errorDetails = Object.entries(errors)
+              .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+              .join('; ');
+            errorMessage = `Erreur de validation: ${errorDetails}`;
+          }
+        } else if (error.response?.status === 413) {
+          errorMessage = 'Fichier trop volumineux. La taille maximale est de 50MB par fichier.';
+        } else if (error.response?.status === 500) {
+          errorMessage = error.response.data.message || 'Erreur serveur. Vérifiez les logs du serveur.';
+        } else if (error.code === 'ERR_NETWORK') {
+          errorMessage = 'Erreur de connexion au serveur. Vérifiez que le serveur backend est démarré.';
+        } else {
+          errorMessage = error.response?.data?.message || 'Une erreur inattendue est survenue.';
+        }
+        
+        setSubmitError(errorMessage);
       } else {
         setSubmitError('Une erreur inattendue est survenue.');
       }

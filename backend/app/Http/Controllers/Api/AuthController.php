@@ -94,4 +94,37 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Deconnecte avec succes.']);
     }
+
+    public function testAuth(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié',
+                'debug' => [
+                    'has_user' => false,
+                    'headers' => $request->headers->all(),
+                    'authorization' => $request->header('Authorization')
+                ]
+            ], 401);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Authentifié avec succès',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role
+            ],
+            'debug' => [
+                'has_user' => true,
+                'guard' => auth()->getDefaultDriver(),
+                'current_guard' => auth()->guard()->getName()
+            ]
+        ]);
+    }
 }

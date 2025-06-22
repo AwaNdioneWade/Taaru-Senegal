@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import fashionShowcase from '../../../../assets/images/fashion-showcase.png'
 import CardCreation from './CardCreation'
+import { getModeles, Modele } from '../../../../../services/modeleService'
 
 interface Creation {
   id: number
@@ -24,128 +25,67 @@ interface Creation {
   }
 }
 
-const creations: Creation[] = [
-  {
-    id: 1,
-    title: 'Boubou Traditionnel',
-    description: 'Création sur mesure en tissu wax, parfait pour les cérémonies traditionnelles',
-    image: fashionShowcase,
-    images: [fashionShowcase, fashionShowcase, fashionShowcase],
-    color: '#00853F',
-    price: 'À partir de 45 000 FCFA',
-    category: 'Tenue Traditionnelle',
-    materials: ['Tissu Wax', 'Soie', 'Perles'],
-    rating: 4.8,
+// Fonction pour convertir un Modele en Creation
+const convertModeleToCreation = (modele: Modele): Creation => {
+  // Obtenir la première photo du modèle
+  const getFirstPhoto = (modele: Modele) => {
+    if (modele.photos && modele.photos.length > 0) {
+      return `http://localhost:8000/${modele.photos[0]}`;
+    }
+    return fashionShowcase; // Image par défaut
+  };
+
+  // Obtenir toutes les photos du modèle
+  const getAllPhotos = (modele: Modele) => {
+    if (modele.photos && modele.photos.length > 0) {
+      return modele.photos.map(photo => `http://localhost:8000/${photo}`);
+    }
+    return [fashionShowcase]; // Image par défaut
+  };
+
+  // Déterminer la couleur en fonction du type
+  const getColorByType = (type: string) => {
+    const colors: { [key: string]: string } = {
+      'homme': '#00853F',
+      'femme': '#FDEF00',
+      'enfant': '#E30B17',
+      'mixte': '#00853F'
+    };
+    return colors[type] || '#00853F';
+  };
+
+  // Déterminer la catégorie en fonction du type
+  const getCategoryByType = (type: string) => {
+    const categories: { [key: string]: string } = {
+      'homme': 'Tenue de Ville',
+      'femme': 'Prêt-à-porter',
+      'enfant': 'Enfant',
+      'mixte': 'Tenue Traditionnelle'
+    };
+    return categories[type] || 'Création';
+  };
+
+  return {
+    id: modele.id,
+    title: modele.nom,
+    description: modele.description,
+    image: getFirstPhoto(modele),
+    images: getAllPhotos(modele),
+    color: getColorByType(modele.type),
+    price: modele.prix ? `À partir de ${Number(modele.prix).toLocaleString()} FCFA` : 'Prix sur demande',
+    category: getCategoryByType(modele.type),
+    materials: modele.materiaux || [],
+    rating: 4.8, // Note par défaut
     artisan: {
-      id: 1,
-      name: 'Mamadou Diop',
-      phone: '+221 77 123 45 67',
-      email: 'mamadou.diop@email.com',
-      address: '123 Rue des Artisans',
+      id: modele.user?.id || 0,
+      name: modele.user?.name || 'Artisan',
+      phone: '+221 00 000 00 00',
+      email: modele.user?.email || 'artisan@taaru.sn',
+      address: 'Dakar',
       city: 'Dakar'
     }
-  },
-  {
-    id: 2,
-    title: 'Robe Moderne',
-    description: 'Inspiration traditionnelle, style contemporain pour femme élégante',
-    image: fashionShowcase,
-    images: [fashionShowcase, fashionShowcase],
-    color: '#FDEF00',
-    price: 'À partir de 35 000 FCFA',
-    category: 'Prêt-à-porter',
-    materials: ['Bazin', 'Dentelle', 'Perles'],
-    rating: 4.9,
-    artisan: {
-      id: 2,
-      name: 'Aïssatou Fall',
-      phone: '+221 77 234 56 78',
-      email: 'aissatou.fall@email.com',
-      address: '456 Avenue des Créateurs',
-      city: 'Dakar'
-    }
-  },
-  {
-    id: 3,
-    title: 'Accessoires',
-    description: 'Collection exclusive de sacs et bijoux artisanaux',
-    image: fashionShowcase,
-    images: [fashionShowcase],
-    color: '#E30B17',
-    price: 'À partir de 15 000 FCFA',
-    category: 'Accessoires',
-    materials: ['Cuir', 'Perles', 'Bois'],
-    rating: 4.7,
-    artisan: {
-      id: 3,
-      name: 'Ousmane Ndiaye',
-      phone: '+221 77 345 67 89',
-      email: 'ousmane.ndiaye@email.com',
-      address: '789 Boulevard des Artisans',
-      city: 'Dakar'
-    }
-  },
-  {
-    id: 4,
-    title: 'Costume Homme',
-    description: 'Élégance africaine moderne pour homme d\'affaires',
-    image: fashionShowcase,
-    images: [fashionShowcase, fashionShowcase],
-    color: '#00853F',
-    price: 'À partir de 55 000 FCFA',
-    category: 'Tenue de Ville',
-    materials: ['Bazin', 'Soie', 'Laine'],
-    rating: 4.9,
-    artisan: {
-      id: 4,
-      name: 'Cheikh Mbaye',
-      phone: '+221 77 456 78 90',
-      email: 'cheikh.mbaye@email.com',
-      address: '101 Rue des Artisans',
-      city: 'Dakar'
-    }
-  },
-  {
-    id: 5,
-    title: 'Tenue Cérémonie',
-    description: 'Collection spéciale pour les grands événements',
-    image: fashionShowcase,
-    images: [fashionShowcase, fashionShowcase, fashionShowcase],
-    color: '#FDEF00',
-    price: 'À partir de 65 000 FCFA',
-    category: 'Cérémonie',
-    materials: ['Bazin riche', 'Soie', 'Perles'],
-    rating: 5.0,
-    artisan: {
-      id: 5,
-      name: 'Fatou Diouf',
-      phone: '+221 77 567 89 01',
-      email: 'fatou.diouf@email.com',
-      address: '222 Rue des Créateurs',
-      city: 'Dakar'
-    }
-  },
-  {
-    id: 6,
-    title: 'Collection Enfant',
-    description: 'Mode traditionnelle adaptée pour les plus petits',
-    image: fashionShowcase,
-    images: [fashionShowcase],
-    color: '#E30B17',
-    price: 'À partir de 25 000 FCFA',
-    category: 'Enfant',
-    materials: ['Coton', 'Wax', 'Perles'],
-    rating: 4.8,
-    artisan: {
-      id: 6,
-      name: 'Marième Sarr',
-      phone: '+221 77 678 90 12',
-      email: 'marieeme.sarr@email.com',
-      address: '333 Boulevard des Artisans',
-      city: 'Dakar'
-    }
-  }
-]
+  };
+};
 
 // Fonction pour déterminer le type d'artisan en fonction de la catégorie
 const getArtisanType = (category: string): string => {
@@ -173,11 +113,41 @@ const getArtisanType = (category: string): string => {
 
 function Creation() {
   const [selectedImage, setSelectedImage] = useState<number | null>(null)
+  const [creations, setCreations] = useState<Creation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   // Ajout d'un carrousel d'images dans le modal
   const [currentImage, setCurrentImage] = useState(0);
-  const selectedCreation = selectedImage !== null ? creations[selectedImage - 1] : null;
+  const selectedCreation = selectedImage !== null ? creations.find(c => c.id === selectedImage) : null;
+
+  // Charger les modèles depuis l'API
+  useEffect(() => {
+    const fetchModeles = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Utiliser la version publique (sans authentification)
+        const response = await getModeles({ 
+          per_page: 6, 
+          statut: 'actif',
+          useAuth: false // Forcer l'utilisation de la version publique
+        });
+        
+        const convertedCreations = response.data.map(convertModeleToCreation);
+        setCreations(convertedCreations);
+      } catch (err) {
+        console.error('Erreur lors du chargement des modèles:', err);
+        setError('Erreur lors du chargement des créations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModeles();
+  }, []);
 
   const handleArtisanClick = (artisanId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -209,29 +179,67 @@ function Creation() {
     ))
   }
 
-  return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#333333] mb-6">Nos Créations</h2>
-          <div className="w-24 h-1 bg-[#00853F] mx-auto mb-6"></div>
-          <p className="text-lg text-[#333333] max-w-2xl mx-auto">
-            Découvrez notre sélection de créations uniques, alliant tradition et modernité
-          </p>
+  if (loading) {
+    return (
+      <div className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Nos Créations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+                <div className="bg-gray-300 h-48 rounded-lg mb-4"></div>
+                <div className="bg-gray-300 h-4 rounded mb-2"></div>
+                <div className="bg-gray-300 h-4 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {creations.map((creation) => (
-            <CardCreation
-              key={creation.id}
-              creation={creation}
-              getArtisanType={getArtisanType}
-              renderStars={renderStars}
-              onSelect={setSelectedImage}
-              onArtisanClick={handleArtisanClick}
-            />
-          ))}
+  if (error) {
+    return (
+      <div className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Nos Créations</h2>
+          <div className="text-center text-red-600">
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Réessayer
+            </button>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Nos Créations</h2>
+        
+        {creations.length === 0 ? (
+          <div className="text-center text-gray-600">
+            <p>Aucune création disponible pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {creations.map((creation) => (
+              <CardCreation
+                key={creation.id}
+                creation={creation}
+                getArtisanType={getArtisanType}
+                renderStars={renderStars}
+                onSelect={setSelectedImage}
+                onArtisanClick={handleArtisanClick}
+              />
+            ))}
+          </div>
+        )}
 
         {selectedImage !== null && selectedCreation && (
           <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -266,6 +274,9 @@ function Creation() {
                       src={selectedCreation.images[currentImage]}
                       alt={selectedCreation.title}
                       className="w-full h-full object-cover rounded-xl transition-all duration-500"
+                      onError={(e) => {
+                        e.currentTarget.src = fashionShowcase;
+                      }}
                 />
                     {/* Miniatures */}
                     {selectedCreation.images.length > 1 && (
@@ -361,10 +372,8 @@ function Creation() {
           </div>
         )}
       </div>
-    </section>
+    </div>
   )
 }
 
 export default Creation
-
-export { creations };
