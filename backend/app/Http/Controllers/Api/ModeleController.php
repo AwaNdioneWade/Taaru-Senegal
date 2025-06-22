@@ -121,11 +121,17 @@ class ModeleController extends Controller
                     'request_user' => $request->user() ? $request->user()->id : 'null'
                 ]);
                 
-                return response()->json([
+                $response = response()->json([
                     'success' => false,
                     'message' => 'Utilisateur non authentifié',
                     'error' => 'Token valide mais utilisateur non trouvé'
                 ], 401);
+                
+                // Ajouter les en-têtes CORS manuellement
+                $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                
+                return $response;
             }
             
             // Validation
@@ -133,21 +139,27 @@ class ModeleController extends Controller
                 'nom' => 'required|string|max:255',
                 'description' => 'required|string',
                 'type' => 'required|string|in:homme,femme,enfant,mixte',
-                'prix' => 'required|numeric|min:0',
-                'materiaux' => 'required|string',
+                'prix' => 'nullable|numeric|min:0',
+                'materiaux' => 'nullable|string',
                 'tags' => 'nullable|string',
+                'statut' => 'nullable|string|in:en_attente,approuve,rejete,actif',
                 'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
-                'videos.*' => 'nullable|mimes:mp4,avi,mov,wmv,flv,webm,mkv|max:51200', // 50MB max
+                'videos.*' => 'nullable|file|mimes:mp4,avi,mov,wmv,flv,webm,mkv,3gp,m4v|max:51200', // 50MB max
             ], [
                 'photos.*.image' => 'Le fichier doit être une image.',
                 'photos.*.mimes' => 'Le format d\'image doit être : jpeg, png, jpg, gif, webp.',
                 'photos.*.max' => 'La taille de l\'image ne doit pas dépasser 10MB.',
-                'videos.*.mimes' => 'Le format vidéo doit être : mp4, avi, mov, wmv, flv, webm, mkv.',
+                'videos.*.file' => 'Le fichier doit être un fichier valide.',
+                'videos.*.mimes' => 'Le format vidéo doit être : mp4, avi, mov, wmv, flv, webm, mkv, 3gp, m4v.',
                 'videos.*.max' => 'La taille de la vidéo ne doit pas dépasser 50MB.',
             ]);
 
             if ($validator->fails()) {
-                Log::warning('Validation échouée', ['errors' => $validator->errors()]);
+                Log::warning('Validation échouée', [
+                    'errors' => $validator->errors(),
+                    'request_data' => $request->except(['photos', 'videos']),
+                    'files_count' => count($request->allFiles())
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Données invalides',
@@ -155,14 +167,26 @@ class ModeleController extends Controller
                 ], 422);
             }
 
-            Log::info('Validation réussie, début du traitement des fichiers');
+            Log::info('Validation réussie, début du traitement des fichiers', [
+                'files_count' => count($request->allFiles()),
+                'all_files' => array_keys($request->allFiles())
+            ]);
             
-            // Traitement des photos
+            // Traitement des photos - récupérer tous les fichiers photos
             $photos = [];
-            if ($request->hasFile('photos')) {
-                Log::info('Traitement des photos', ['count' => count($request->file('photos'))]);
+            $photoFiles = [];
+            
+            // Collecter tous les fichiers photos depuis la requête
+            foreach ($request->allFiles() as $key => $file) {
+                if (str_starts_with($key, 'photos[') && str_ends_with($key, ']')) {
+                    $photoFiles[] = $file;
+                }
+            }
+            
+            if (!empty($photoFiles)) {
+                Log::info('Traitement des photos', ['count' => count($photoFiles)]);
                 
-                foreach ($request->file('photos') as $photo) {
+                foreach ($photoFiles as $photo) {
                     try {
                         Log::info('Traitement de la photo', [
                             'original_name' => $photo->getClientOriginalName(),
@@ -188,18 +212,51 @@ class ModeleController extends Controller
                 }
             }
 
-            // Traitement des vidéos
+            // Traitement des vidéos - récupérer tous les fichiers vidéos
             $videos = [];
-            if ($request->hasFile('videos')) {
-                Log::info('Traitement des vidéos', ['count' => count($request->file('videos'))]);
+            $videoFiles = [];
+            
+            // Collecter tous les fichiers vidéos depuis la requête
+            foreach ($request->allFiles() as $key => $file) {
+                if (str_starts_with($key, 'videos[') && str_ends_with($key, ']')) {
+                    $videoFiles[] = $file;
+                }
+            }
+            
+            if (!empty($videoFiles)) {
+                Log::info('Traitement des vidéos', ['count' => count($videoFiles)]);
                 
-                foreach ($request->file('videos') as $video) {
+                foreach ($videoFiles as $index => $video) {
                     try {
                         Log::info('Traitement de la vidéo', [
+                            'index' => $index,
                             'original_name' => $video->getClientOriginalName(),
                             'size' => $video->getSize(),
-                            'mime_type' => $video->getMimeType()
+                            'mime_type' => $video->getMimeType(),
+                            'extension' => $video->getClientOriginalExtension(),
+                            'error' => $video->getError(),
+                            'is_valid' => $video->isValid()
                         ]);
+                        
+                        // Vérifier si le fichier est valide
+                        if (!$video->isValid()) {
+                            Log::error('Fichier vidéo invalide', [
+                                'index' => $index,
+                                'error' => $video->getError(),
+                                'error_message' => $this->getUploadErrorMessage($video->getError())
+                            ]);
+                            throw new \Exception('Fichier vidéo invalide: ' . $this->getUploadErrorMessage($video->getError()));
+                        }
+                        
+                        // Vérifier la taille du fichier
+                        if ($video->getSize() > 50 * 1024 * 1024) { // 50MB
+                            Log::error('Fichier vidéo trop volumineux', [
+                                'index' => $index,
+                                'size' => $video->getSize(),
+                                'max_size' => 50 * 1024 * 1024
+                            ]);
+                            throw new \Exception('Fichier vidéo trop volumineux. Taille maximale: 50MB');
+                        }
                         
                         $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
                         $path = $video->storeAs('public/modeles/videos', $filename);
@@ -209,12 +266,15 @@ class ModeleController extends Controller
                             Log::info('Vidéo sauvegardée avec succès', ['path' => $path]);
                         } else {
                             Log::error('Échec de la sauvegarde de la vidéo', ['filename' => $filename]);
+                            throw new \Exception('Échec de la sauvegarde de la vidéo');
                         }
                     } catch (\Exception $e) {
                         Log::error('Erreur lors du traitement de la vidéo', [
+                            'index' => $index,
                             'error' => $e->getMessage(),
                             'filename' => $video->getClientOriginalName()
                         ]);
+                        throw $e;
                     }
                 }
             }
@@ -238,12 +298,12 @@ class ModeleController extends Controller
                 'slug' => $slug,
                 'description' => $request->description,
                 'type' => $request->type,
-                'prix' => $request->prix,
-                'materiaux' => json_encode([$request->materiaux]),
-                'tags' => json_encode([$request->tags]),
+                'prix' => $request->prix ?? 0,
+                'materiaux' => $request->materiaux ? json_encode([$request->materiaux]) : null,
+                'tags' => $request->tags ? json_encode([$request->tags]) : null,
                 'photos' => json_encode($photos),
                 'videos' => json_encode($videos),
-                'statut' => 'en_revision'
+                'statut' => $request->statut ?? 'en_attente'
             ]);
 
             Log::info('Modèle créé avec succès', [
@@ -251,11 +311,17 @@ class ModeleController extends Controller
                 'nom' => $modele->nom
             ]);
 
-            return response()->json([
+            $response = response()->json([
                 'success' => true,
                 'message' => 'Modèle créé avec succès',
                 'data' => $modele->load('user')
             ], 201);
+
+            // Ajouter les en-têtes CORS manuellement
+            $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+
+            return $response;
 
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création du modèle', [
@@ -264,11 +330,17 @@ class ModeleController extends Controller
                 'user_id' => $user ? $user->id : 'non authentifié'
             ]);
             
-            return response()->json([
+            $response = response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création du modèle',
                 'error' => $e->getMessage()
             ], 500);
+
+            // Ajouter les en-têtes CORS manuellement
+            $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+
+            return $response;
         }
     }
 
@@ -278,48 +350,18 @@ class ModeleController extends Controller
     public function show(string $id)
     {
         try {
-            $user = Auth::user();
-            $query = Modele::with('user');
-
-            // Filtrage par utilisateur (tailleur) - seulement si l'utilisateur est authentifié
-            if ($user && $user->role === 'tailleur') {
-                // Les tailleurs ne peuvent voir que leurs propres modèles
-                $query->where('user_id', $user->id);
-            } else {
-                // Pour les utilisateurs non authentifiés, afficher seulement les modèles actifs
-                $query->where('statut', 'actif');
-            }
-
-            $modele = $query->find($id);
-
-            if (!$modele) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Modèle non trouvé',
-                ], 404);
-            }
-
-            Log::info('Modèle récupéré avec succès', [
-                'modele_id' => $modele->id,
-                'user_authenticated' => $user ? 'yes' : 'no',
-                'user_role' => $user ? $user->role : 'none'
-            ]);
-
+            $modele = Modele::with('user')->findOrFail($id);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Modèle récupéré avec succès',
-                'data' => $modele,
+                'data' => $modele
             ]);
-            
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la récupération du modèle', [
-                'error' => $e->getMessage(),
-                'modele_id' => $id
-            ]);
-            
             return response()->json([
                 'success' => false,
-                'message' => 'Modèle non trouvé'
+                'message' => 'Modèle non trouvé',
+                'error' => $e->getMessage()
             ], 404);
         }
     }
@@ -405,6 +447,33 @@ class ModeleController extends Controller
                 'success' => false,
                 'message' => 'Erreur lors de la suppression'
             ], 500);
+        }
+    }
+
+    /**
+     * Traduit les codes d'erreur d'upload PHP en messages lisibles
+     */
+    private function getUploadErrorMessage($errorCode)
+    {
+        switch ($errorCode) {
+            case UPLOAD_ERR_OK:
+                return 'Aucune erreur';
+            case UPLOAD_ERR_INI_SIZE:
+                return 'Le fichier dépasse la taille maximale autorisée par PHP (upload_max_filesize)';
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'Le fichier dépasse la taille maximale autorisée par le formulaire (MAX_FILE_SIZE)';
+            case UPLOAD_ERR_PARTIAL:
+                return 'Le fichier n\'a été que partiellement téléversé';
+            case UPLOAD_ERR_NO_FILE:
+                return 'Aucun fichier n\'a été téléversé';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Dossier temporaire manquant';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Échec de l\'écriture du fichier sur le disque';
+            case UPLOAD_ERR_EXTENSION:
+                return 'Une extension PHP a arrêté le téléversement du fichier';
+            default:
+                return 'Erreur inconnue';
         }
     }
 }

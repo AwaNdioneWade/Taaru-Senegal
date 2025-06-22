@@ -77,16 +77,42 @@ const Dashboard = () => {
     Object.keys(data).forEach(key => {
       const value = data[key];
       if (key === 'media' && Array.isArray(value)) {
-        value.forEach((file, index) => {
+        // Séparer les photos et vidéos selon leur type MIME
+        const photos: File[] = [];
+        const videos: File[] = [];
+        
+        value.forEach((file) => {
           if (file instanceof File) {
-            console.log(`Ajout du fichier ${index}:`, {
+            console.log(`Analyse du fichier:`, {
               name: file.name,
               size: file.size,
               type: file.type
             });
-            formData.append(`media.${index}`, file);
+            
+            // Déterminer si c'est une photo ou une vidéo
+            if (file.type.startsWith('image/')) {
+              photos.push(file);
+              console.log(`Fichier ajouté aux photos: ${file.name}`);
+            } else if (file.type.startsWith('video/')) {
+              videos.push(file);
+              console.log(`Fichier ajouté aux vidéos: ${file.name}`);
+            } else {
+              console.warn(`Type de fichier non reconnu: ${file.type} pour ${file.name}`);
+            }
           }
         });
+        
+        // Ajouter les photos
+        photos.forEach((photo, index) => {
+          formData.append(`photos[${index}]`, photo);
+        });
+        
+        // Ajouter les vidéos
+        videos.forEach((video, index) => {
+          formData.append(`videos[${index}]`, video);
+        });
+        
+        console.log(`Fichiers séparés: ${photos.length} photos, ${videos.length} vidéos`);
       } else if (value !== null && value !== undefined && typeof value === 'string') {
         formData.append(key, value);
       }
@@ -238,6 +264,29 @@ const Dashboard = () => {
                 className="w-full px-4 py-2 text-sm font-medium text-white bg-[#00853F] rounded-lg hover:bg-[#006B32]"
               >
                 Ajouter un nouveau modèle
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Test de la configuration CORS...');
+                    const response = await fetch('http://localhost:8000/api/test-cors', {
+                      method: 'OPTIONS',
+                      headers: {
+                        'Origin': 'http://localhost:5173',
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type, Authorization'
+                      }
+                    });
+                    console.log('✅ Test CORS réussi:', response.status);
+                    alert('Test CORS réussi !');
+                  } catch (error) {
+                    console.error('❌ Test CORS échoué:', error);
+                    alert('Test CORS échoué. Vérifiez la configuration.');
+                  }
+                }}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-yellow-100 rounded-lg hover:bg-yellow-200"
+              >
+                Test CORS
               </button>
               <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
                 Voir les commandes en attente

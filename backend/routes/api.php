@@ -46,3 +46,16 @@ Route::middleware(['api.auth', 'role:admin'])->prefix('admin')->group(function (
     // Ajoutez ici d'autres routes d'administration
 });
 
+// Routes de test et diagnostic
+Route::get('/test-cors', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'Test CORS réussi',
+        'timestamp' => now()
+    ]);
+});
+
+Route::options('/test-cors', function () {
+    return response()->json(['message' => 'OPTIONS request handled'], 200);
+});
+

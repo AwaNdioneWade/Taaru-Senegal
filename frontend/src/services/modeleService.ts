@@ -226,7 +226,15 @@ export async function createModele(formData: FormData) {
     // Vérifier que le serveur est accessible
     const response = await axios.post(API_URL, formData, {
       ...config,
-      timeout: 30000, // 30 secondes de timeout
+      timeout: 120000, // 2 minutes de timeout pour les uploads de fichiers
+      maxContentLength: 100 * 1024 * 1024, // 100MB max
+      maxBodyLength: 100 * 1024 * 1024, // 100MB max
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`📤 Upload progress: ${percentCompleted}%`);
+        }
+      },
       validateStatus: (status) => {
         return status >= 200 && status < 300; // Accepter seulement les statuts 2xx
       }

@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.auth' => \App\Http\Middleware\ApiAuthentication::class,
         ]);
         
-        // Ajouter le middleware CORS
+        // Utiliser le middleware CORS de Laravel et notre middleware personnalisé
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->append(\App\Http\Middleware\CorsMiddleware::class);
     })
